@@ -1,0 +1,732 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style></head><body>
+<title>Study Tracker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cedarville+Cursive&family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;700&family=Monsieur+La+Doulaise&display=swap">
+<style>
+/* Layout: a 1512×982 scrapbook spread. Left page (pink, doily, to-do card) and right page
+   (magnolia painting + polka-dot calendar). Desktop scales the spread as one piece using --k
+   (one design pixel); phones stack the two pages and switch to readable fixed sizes. */
+:root {
+  --pink: #d69cb4;
+  --olive: #798354;
+  --olive-deep: #5e6640;
+  --leaf: #bcb658;
+  --leaf-dot: #c4bf68;
+  --rule: #857e2e;
+  --paper: #ffffff;
+  --ink: #1b1b17;
+  --ink-soft: #3f3f39;
+  --hairline: #e6e4df;
+  --veil: rgba(73, 40, 55, .38);
+  --hand: "Cedarville Cursive", "Segoe Script", "Bradley Hand", cursive;
+  --script: "Monsieur La Doulaise", "Snell Roundhand", "Apple Chancery", cursive;
+  --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --sans: Inter, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: linear-gradient(90deg, var(--pink) 0 50%, var(--leaf) 50% 100%);
+  color: var(--ink);
+  font-family: var(--sans);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* ---------- the spread ---------- */
+.stage {
+  position: relative;
+  width: min(100%, calc(100dvh * 1512 / 982));
+  aspect-ratio: 1512 / 982;
+  margin: 0 auto;
+}
+.page { position: absolute; top: 0; height: 100%; container-type: inline-size; }
+.page.left  { left: 0; width: calc(778 / 1512 * 100%); z-index: 2; --k: calc(100cqw / 778); pointer-events: none; }
+.page.right { left: calc(753 / 1512 * 100%); width: calc(759 / 1512 * 100%); z-index: 1; --k: calc(100cqw / 759); background: var(--leaf); }
+.page.left > * { pointer-events: auto; }
+.page.left .art { position: absolute; inset: 0; background: url(assets/left.webp) 0 0 / 100% 100% no-repeat; pointer-events: none; }
+
+/* ---------- to-do card ---------- */
+.frame {
+  position: absolute;
+  left: calc(306 * var(--k)); top: calc(622 * var(--k));
+  width: calc(411 * var(--k)); height: calc(331 * var(--k));
+  background: var(--olive);
+  border-radius: calc(3 * var(--k));
+  padding: calc(23 * var(--k)) calc(22 * var(--k)) calc(20 * var(--k));
+}
+.card {
+  position: relative;
+  height: 100%;
+  background: var(--paper);
+  border-radius: calc(6 * var(--k));
+  box-shadow: 0 calc(4 * var(--k)) 0 var(--ink);
+  padding: 0 calc(22 * var(--k));
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.task {
+  display: grid;
+  grid-template-columns: calc(32 * var(--k)) 1fr;
+  align-items: center;
+  column-gap: calc(18 * var(--k));
+  padding: calc(14 * var(--k)) 0 calc(14 * var(--k)) calc(20 * var(--k));
+  min-height: calc(88 * var(--k));
+  flex: 1 0 auto;
+  border: 0; background: none; text-align: left;
+  border-bottom: 1px solid var(--hairline);
+  transition: background-color .15s;
+}
+.task:last-of-type { border-bottom: 0; }
+.task:hover { background: #fbf8f3; }
+.tick {
+  width: calc(32 * var(--k)); height: calc(32 * var(--k));
+  border: calc(3 * var(--k)) solid var(--ink);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  transition: background-color .2s, transform .2s;
+}
+.tick svg { width: 62%; height: 62%; opacity: 0; transition: opacity .2s; }
+.task:hover .tick { transform: scale(1.06); }
+.task.done .tick { background: var(--ink); }
+.task.done .tick svg { opacity: 1; }
+.task-title { font-family: var(--hand); font-size: calc(27 * var(--k)); line-height: 1.15; display: block; letter-spacing: .01em; }
+.task-sub { display: flex; align-items: center; flex-wrap: wrap; gap: calc(9 * var(--k)); margin-top: calc(3 * var(--k)); font-size: calc(16.5 * var(--k)); color: var(--ink-soft); }
+.tag {
+  font-family: var(--sans); font-weight: 700;
+  font-size: calc(14 * var(--k)); line-height: 1;
+  padding: calc(3 * var(--k)) calc(7 * var(--k));
+  border: 1px solid var(--tag-border, #ccc);
+  background: var(--tag-bg, #eee);
+  border-radius: calc(3 * var(--k));
+  color: var(--ink);
+}
+.edit-subjects {
+  position: absolute; right: calc(4 * var(--k)); bottom: calc(1 * var(--k));
+  border: 0; background: none; color: #f3f0e2;
+  font-size: calc(12 * var(--k)); letter-spacing: .04em; padding: calc(2 * var(--k)) calc(4 * var(--k));
+  opacity: .8;
+}
+.edit-subjects:hover { opacity: 1; text-decoration: underline; }
+
+/* ---------- calendar page ---------- */
+.painting {
+  position: absolute; left: 0; top: 0; width: 100%; height: calc(470 * var(--k));
+  background: url(assets/painting.webp) 0 0 / 100% 100% no-repeat;
+  -webkit-mask-image: linear-gradient(#000 88%, transparent);
+          mask-image: linear-gradient(#000 88%, transparent);
+}
+.month {
+  position: absolute; right: calc(24 * var(--k)); top: calc(196 * var(--k));
+  margin: 0;
+  font-family: var(--script); font-weight: 400;
+  font-size: calc(150 * var(--k)); line-height: 1;
+  color: var(--ink);
+  white-space: nowrap;
+  text-shadow: 0 0 calc(18 * var(--k)) rgba(240, 236, 190, .35);
+}
+.nav {
+  position: absolute; right: calc(22 * var(--k)); top: calc(410 * var(--k));
+  display: flex; align-items: center; gap: calc(10 * var(--k));
+  font-family: var(--serif); font-size: max(calc(17 * var(--k)), 13px); color: var(--ink);
+}
+.nav button {
+  border: 0; background: rgba(255, 253, 235, .35);
+  width: max(calc(28 * var(--k)), 26px); height: max(calc(28 * var(--k)), 26px);
+  border-radius: 50%; display: grid; place-items: center; font-size: 1.1em; line-height: 1;
+}
+.nav button:hover { background: rgba(255, 253, 235, .7); }
+.nav .today-btn { width: auto; border-radius: 99px; padding: 0 .7em; font-family: var(--serif); font-size: .9em; }
+.nav .year { font-weight: 600; min-width: 2.6em; text-align: center; font-variant-numeric: lining-nums tabular-nums; }
+.nav .total { font-style: italic; opacity: .85; }
+.swans { position: absolute; left: calc(2 * var(--k)); top: calc(376 * var(--k)); width: calc(158 * var(--k)); z-index: 3; pointer-events: none; }
+.flourish { position: absolute; left: calc(523 * var(--k)); top: calc(836 * var(--k)); width: calc(236 * var(--k)); z-index: 3; pointer-events: none; }
+
+.cal {
+  position: absolute;
+  left: calc(20 * var(--k)); top: calc(462 * var(--k));
+  width: calc(719 * var(--k)); height: calc(500 * var(--k));
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: calc(56 * var(--k)) repeat(var(--rows, 5), 1fr);
+  border-top: calc(1.5 * var(--k)) solid var(--rule);
+  border-left: calc(1.5 * var(--k)) solid var(--rule);
+  background-color: var(--leaf);
+  background-image:
+    radial-gradient(circle, var(--leaf-dot) calc(13 * var(--k)), transparent calc(14 * var(--k))),
+    radial-gradient(circle, var(--leaf-dot) calc(13 * var(--k)), transparent calc(14 * var(--k)));
+  background-size: calc(54 * var(--k)) calc(46 * var(--k));
+  background-position: calc(-6 * var(--k)) calc(12 * var(--k)), calc(21 * var(--k)) calc(35 * var(--k));
+}
+.cal > * { border-right: calc(1.5 * var(--k)) solid var(--rule); border-bottom: calc(1.5 * var(--k)) solid var(--rule); min-width: 0; }
+.dow { display: grid; place-items: center; font-family: var(--serif); font-size: max(calc(13 * var(--k)), 11px); color: #3b3a1c; letter-spacing: .01em; }
+.dow .short { display: none; }
+.day {
+  position: relative;
+  border-top: 0; border-left: 0; background: transparent;
+  text-align: left;
+  padding: calc(9 * var(--k)) calc(8 * var(--k)) calc(4 * var(--k)) calc(13 * var(--k));
+  display: flex; flex-direction: column; gap: calc(2 * var(--k));
+  overflow: hidden;
+  transition: background-color .15s;
+}
+.day:hover { background: rgba(255, 252, 220, .28); }
+.day .num {
+  font-family: var(--serif); font-weight: 500;
+  font-size: max(calc(17 * var(--k)), 13px); line-height: 1;
+  color: #2c2b18;
+  width: max-content; min-width: 1.5em; margin-left: -.35em; padding: .12em .35em;
+  border-radius: 99px;
+}
+.day.today .num { background: var(--ink); color: #f3efcf; }
+.day .lines { display: flex; flex-direction: column; gap: calc(1 * var(--k)); margin-top: calc(4 * var(--k)); }
+.ln { display: flex; align-items: center; gap: calc(3 * var(--k)); white-space: nowrap; font-family: var(--hand); font-size: max(calc(13.5 * var(--k)), 10px); color: var(--ink); line-height: 1.15; }
+.ln svg { width: max(calc(17 * var(--k)), 12px); height: max(calc(17 * var(--k)), 12px); flex: none; }
+.day .more { font-family: var(--serif); font-size: max(calc(11 * var(--k)), 10px); font-style: italic; }
+.day .has-note { position: absolute; right: calc(8 * var(--k)); top: calc(9 * var(--k)); width: max(calc(6 * var(--k)), 5px); height: max(calc(6 * var(--k)), 5px); border-radius: 50%; background: var(--olive-deep); opacity: .7; }
+.blank { background: transparent; }
+
+/* ---------- dialogs ---------- */
+.veil {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--veil);
+  display: grid; place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  animation: fade .15s ease-out;
+}
+@keyframes fade { from { opacity: 0; } }
+@keyframes rise { from { transform: translateY(8px); opacity: 0; } }
+.sheet {
+  width: min(440px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  background: var(--olive);
+  border-radius: 4px;
+  padding: 16px;
+  animation: rise .18s ease-out;
+}
+.sheet-in {
+  background: var(--paper);
+  border-radius: 7px;
+  box-shadow: 0 4px 0 var(--ink);
+  padding: 22px 24px 22px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.sheet h2 { margin: 0; font-family: var(--hand); font-weight: 400; font-size: 30px; line-height: 1.1; text-wrap: balance; }
+.sheet .kicker { margin: -10px 0 0; color: var(--ink-soft); font-size: 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.sheet .kicker .tag { font-size: 12px; padding: 3px 6px; border-radius: 3px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label, .field > .lbl { font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+input[type=text], input[type=number], input[type=date], select, textarea {
+  font: inherit; font-size: 16px; color: var(--ink);
+  width: 100%; min-width: 0;
+  padding: 9px 11px;
+  border: 1.5px solid #d9d6cc; border-radius: 6px;
+  background: #fffdf8;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--olive); box-shadow: 0 0 0 3px rgba(121, 131, 84, .25); }
+textarea { resize: vertical; min-height: 84px; font-family: var(--sans); line-height: 1.45; }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; }
+.quick button { border: 1px solid #d9d6cc; background: #fff; border-radius: 99px; padding: 4px 10px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.quick button:hover { border-color: var(--olive); background: #f5f6ef; }
+.actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.btn { border: 1.5px solid var(--ink); background: #fff; border-radius: 6px; padding: 9px 16px; font-weight: 500; font-size: 15px; }
+.btn.primary { background: var(--olive); border-color: var(--olive-deep); color: #fff; box-shadow: 0 2px 0 var(--ink); }
+.btn.primary:hover { background: var(--olive-deep); }
+.btn.ghost { border-color: transparent; background: none; }
+.btn.ghost:hover { text-decoration: underline; }
+.btn:disabled { opacity: .55; cursor: default; }
+.err { color: #a12c2c; font-size: 13px; margin: -6px 0 0; }
+
+.day-total { margin: -8px 0 0; font-family: var(--serif); font-size: 18px; color: var(--ink-soft); }
+.entries { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.entry { display: grid; grid-template-columns: 20px 1fr auto; column-gap: 10px; row-gap: 4px; padding: 12px 0; border-top: 1px solid var(--hairline); align-items: start; }
+.entry:first-child { border-top: 0; padding-top: 2px; }
+.entry svg { width: 20px; height: 20px; margin-top: 1px; }
+.entry .what { font-weight: 500; font-size: 15px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; min-width: 0; }
+.entry .what .tag { font-size: 11px; padding: 2px 5px; }
+.entry .dur { font-family: var(--hand); font-size: 19px; white-space: nowrap; }
+.entry .note { grid-column: 2 / 4; margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-soft); white-space: pre-wrap; overflow-wrap: anywhere; background: #fbf8f1; border-left: 3px solid var(--tag-border, #ccc); padding: 6px 10px; border-radius: 0 4px 4px 0; }
+.entry .no-note { grid-column: 2 / 4; margin: 0; font-size: 13px; color: #8b897f; font-style: italic; }
+.entry .tools { grid-column: 2 / 4; display: flex; gap: 12px; align-items: center; font-size: 13px; }
+.entry .tools button { border: 0; background: none; padding: 0; color: #7b786d; text-decoration: underline; text-underline-offset: 2px; font-size: 13px; }
+.entry .tools button:hover { color: var(--ink); }
+.entry .tools .confirm { color: #a12c2c; }
+.empty-day { margin: 0; color: var(--ink-soft); font-size: 15px; line-height: 1.5; }
+
+.subj-list { display: flex; flex-direction: column; gap: 12px; }
+.subj { border: 1px solid var(--hairline); border-radius: 8px; padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.subj .full { grid-column: 1 / 3; }
+.subj .swatches { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; background: none; padding: 2px; display: grid; place-items: center; }
+.swatch svg { width: 20px; height: 20px; }
+.swatch[aria-pressed=true] { border-color: var(--ink); }
+.subj .remove { justify-self: end; grid-column: 1 / 3; border: 0; background: none; color: #a12c2c; font-size: 13px; text-decoration: underline; padding: 0; }
+.add-subj { align-self: flex-start; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 60;
+  transform: translateX(-50%);
+  background: var(--ink); color: #f4f0d8;
+  padding: 10px 16px; border-radius: 8px; font-size: 14px;
+  max-width: calc(100vw - 32px);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+}
+
+/* ---------- phones & narrow windows: stack the pages ---------- */
+@media (max-width: 900px) {
+  body { background: var(--pink); }
+  .stage { width: 100%; aspect-ratio: auto; max-width: 560px; }
+  .page { position: relative; height: auto; }
+  .page.left { width: 100%; left: auto; pointer-events: auto; padding-bottom: 28px; --k: min(1px, calc(100cqw / 411)); }
+  .page.left .art { position: relative; inset: auto; width: calc(100% + 32px); margin: 0 -16px; aspect-ratio: 778 / 600; background-size: 100% auto; }
+  .frame { position: relative; left: auto; top: auto; width: 100%; height: auto; margin: -6px auto 0; max-width: 411px; }
+  .card { height: auto; max-height: none; }
+  .task-title { font-size: 25px; }
+  .page.right {
+    left: auto; width: calc(100% + 32px); margin: 0 -16px;
+    padding: 0 16px 28px;
+    --k: calc((100cqw - 32px) / 719);
+  }
+  .painting { position: relative; width: calc(100% + 32px); margin: 0 -16px; height: auto; aspect-ratio: 759 / 400; background-size: 106% auto; background-position: right top; }
+  .month { top: calc(100cqw * 400 / 759 * .42); bottom: auto; right: 14px; font-size: calc(170 * var(--k)); }
+  .nav { position: relative; right: auto; top: auto; justify-content: flex-end; margin: 4px 0 26px; flex-wrap: wrap; }
+  .swans { display: none; }
+  .flourish { display: none; }
+  .cal { position: relative; left: auto; top: auto; width: 100%; height: auto; grid-template-rows: 40px; grid-auto-rows: minmax(70px, auto); }
+  .dow .full { display: none; }
+  .dow .short { display: inline; }
+  .day { padding: 6px 4px 6px 6px; }
+  .ln .t { display: none; }
+  .day .lines { flex-direction: row; flex-wrap: wrap; gap: 1px; }
+  .day .more { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<main class="stage" id="stage">
+  <section class="page left" aria-label="Study list">
+    <div class="art" role="img" aria-label="Study Tracker title on a lace doily with a star, a 'Today I make moves' sticky note, and a Bhagavad Gita quote: Those who commit to nothing are distracted by everything."></div>
+    <div class="frame">
+      <div class="card" id="tasks"></div>
+      <button class="edit-subjects" id="editSubjects" type="button">edit list</button>
+    </div>
+  </section>
+
+  <section class="page right" aria-label="Calendar">
+    <div class="painting" aria-hidden="true"></div>
+    <h1 class="month" id="monthName">November</h1>
+    <div class="nav">
+      <span class="total" id="monthTotal"></span>
+      <button type="button" id="prev" aria-label="Previous month">‹</button>
+      <span class="year" id="year">2026</span>
+      <button type="button" id="next" aria-label="Next month">›</button>
+      <button type="button" class="today-btn" id="todayBtn">today</button>
+    </div>
+    <img class="swans" src="assets/swans.png" alt="">
+    <div class="cal" id="cal" role="grid"></div>
+    <img class="flourish" src="assets/flourish.png" alt="">
+  </section>
+</main>
+
+<div id="modalRoot"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(() => {
+  // ---------- constants ----------
+  const PALETTE = {
+    orange: { star: "#f29d12", bg: "#fff0d9", border: "#eeae45", label: "Marigold" },
+    pink:   { star: "#e05f98", bg: "#fadbe7", border: "#e38fb1", label: "Rose" },
+    blue:   { star: "#3d8dbe", bg: "#a9cfdc", border: "#5d97ab", label: "Sky" },
+    green:  { star: "#6a8f35", bg: "#e0ecca", border: "#8fae5f", label: "Fern" },
+    purple: { star: "#8b62c6", bg: "#e9def7", border: "#a88bd6", label: "Lilac" },
+    red:    { star: "#d0483b", bg: "#fbdcd8", border: "#e08a80", label: "Poppy" },
+  };
+  const DEFAULT_SUBJECTS = [
+    { id: "math239", title: "Add Study Time", name: "Combinatorics", tag: "MATH239", color: "orange" },
+    { id: "cs350", title: "Add Study Time", name: "Operating Systems", tag: "CS350", color: "pink" },
+    { id: "reading", title: "Reading Time", name: "Any Book of Choice", tag: "<3", color: "blue" },
+  ];
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const DOW = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const LS_KEY = "study-tracker-v1";
+  const STAR = "M12 2.4l2.95 6.1 6.65.85-4.88 4.6 1.25 6.6L12 17.3l-5.97 3.25 1.25-6.6L2.4 9.35l6.65-.85z";
+
+  // ---------- state ----------
+  const state = { entries: [], subjects: DEFAULT_SUBJECTS.slice(), db: null };
+  const now = new Date();
+  const view = { y: now.getFullYear(), m: now.getMonth() };
+
+  // ---------- helpers ----------
+  const $ = (s, r = document) => r.querySelector(s);
+  const el = (tag, attrs = {}, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v == null || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k === "style") n.setAttribute("style", v);
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? "" : v);
+    }
+    for (const kid of kids.flat()) if (kid != null && kid !== false) n.append(kid.nodeType ? kid : document.createTextNode(kid));
+    return n;
+  };
+  const svgStar = (color) => {
+    const ns = "http://www.w3.org/2000/svg";
+    const s = document.createElementNS(ns, "svg");
+    s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("aria-hidden", "true");
+    const p = document.createElementNS(ns, "path");
+    p.setAttribute("d", STAR); p.setAttribute("fill", color);
+    p.setAttribute("stroke", "rgba(0,0,0,.18)"); p.setAttribute("stroke-width", ".6"); p.setAttribute("stroke-linejoin", "round");
+    s.append(p); return s;
+  };
+  const pad = (n) => String(n).padStart(2, "0");
+  const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const todayIso = () => iso(new Date());
+  const parseIso = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const pal = (c) => PALETTE[c] || PALETTE.orange;
+  const tagStyle = (c) => `--tag-bg:${pal(c).bg};--tag-border:${pal(c).border}`;
+  const fmtDur = (min) => {
+    if (min < 60) return `${min} min`;
+    const h = Math.round((min / 60) * 100) / 100;
+    return `${h} ${h === 1 ? "hour" : "hours"}`;
+  };
+  const fmtShort = (min) => min < 60 ? `${min}m` : `${Math.round(min / 6) / 10}h`;
+  const subjectFor = (e) => state.subjects.find((s) => s.id === e.subjectId) ||
+    { id: e.subjectId, title: "", name: e.subjectName || "Study", tag: e.tag || "", color: e.color || "orange" };
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+  let toastTimer;
+  function toast(msg, ms = 2600) {
+    const t = $("#toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), ms);
+  }
+
+  // ---------- storage: claude.ai db when available, browser storage otherwise ----------
+  // On claude.ai every signed-in person gets a private calendar under data/users/<their id>/,
+  // so a shared link gives each person their own hours and subjects.
+  let lsKey = LS_KEY;
+  let trackerRef = null; // data/users/<id>/tracker  (holds { subjects })
+  const entriesCol = () => trackerRef.collection("entries");
+  function loadLocal() {
+    try {
+      const d = JSON.parse(localStorage.getItem(lsKey) || "null");
+      if (d) { if (Array.isArray(d.entries)) state.entries = d.entries; if (Array.isArray(d.subjects) && d.subjects.length) state.subjects = d.subjects; }
+    } catch (e) {}
+  }
+  function saveLocal() {
+    try { localStorage.setItem(lsKey, JSON.stringify({ entries: state.entries, subjects: state.subjects })); } catch (e) {}
+  }
+  async function writeEntry(entry) {
+    state.entries = state.entries.filter((e) => e.id !== entry.id).concat(entry);
+    saveLocal(); render();
+    if (state.db) {
+      const { id, ...body } = entry;
+      try { await entriesCol().doc(id).set(body); }
+      catch (err) { toast("That entry didn't save: " + (err && err.message || "try again in a moment.")); state.entries = state.entries.filter((e) => e.id !== entry.id); saveLocal(); render(); throw err; }
+    }
+  }
+  async function removeEntry(id) {
+    const before = state.entries;
+    state.entries = state.entries.filter((e) => e.id !== id);
+    saveLocal(); render();
+    if (state.db) {
+      try { await entriesCol().doc(id).delete(); }
+      catch (err) { state.entries = before; saveLocal(); render(); toast("Couldn't remove that entry. Try again in a moment."); }
+    }
+  }
+  async function writeSubjects(list) {
+    state.subjects = list; saveLocal(); render();
+    if (state.db) {
+      try { await trackerRef.set({ subjects: list }); }
+      catch (err) { toast("Your list didn't save: " + (err && err.message || "try again.")); }
+    }
+  }
+  async function connectDb() {
+    if (!window.claude || typeof window.claude.use !== "function") return;
+    let db = null;
+    try { db = await window.claude.use("db"); } catch (e) { db = null; }
+    if (!db) return;
+    let uid = null;
+    try { const user = await window.claude.use("user"); uid = user ? await user.id() : null; } catch (e) { uid = null; }
+    if (!uid) { toast("Sign in to claude.ai to keep your hours. For now they're saved in this browser only.", 5000); return; }
+    trackerRef = db.doc("data/users/" + uid + "/tracker");
+    // switch the browser cache to this person's own copy
+    lsKey = LS_KEY + ":" + uid;
+    state.entries = []; state.subjects = DEFAULT_SUBJECTS.slice();
+    loadLocal(); render();
+    state.db = db;
+    let settled = false;
+    const timer = setTimeout(() => { if (!settled) toast("Still reaching your saved hours. What you see may be out of date.", 5000); }, 10000);
+    entriesCol().onSnapshot((snap) => {
+      if (!snap.metadata.fromCache) { settled = true; clearTimeout(timer); }
+      state.entries = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      saveLocal(); render();
+    }, (err) => { settled = true; clearTimeout(timer); toast("Saved hours can't be loaded right now (" + err.code + ")."); });
+    trackerRef.onSnapshot((snap) => {
+      if (snap.exists) { const l = snap.data().subjects; if (Array.isArray(l) && l.length) { state.subjects = l; saveLocal(); render(); } }
+    }, () => {});
+  }
+
+  // ---------- render ----------
+  const doneFlash = new Set();
+  function renderTasks() {
+    const box = $("#tasks"); box.replaceChildren();
+    for (const s of state.subjects) {
+      const btn = el("button", { class: "task" + (doneFlash.has(s.id) ? " done" : ""), type: "button", "aria-label": `${s.title || "Add Study Time"}: ${s.name} ${s.tag}`, onclick: () => openLog({ subjectId: s.id }) },
+        el("span", { class: "tick", "aria-hidden": "true" }),
+        el("span", {},
+          el("span", { class: "task-title", text: s.title || "Add Study Time" }),
+          el("span", { class: "task-sub" }, s.name, s.tag ? el("span", { class: "tag", style: tagStyle(s.color), text: s.tag }) : null)));
+      btn.querySelector(".tick").innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      box.append(btn);
+    }
+  }
+
+  function byDay() {
+    const map = new Map();
+    for (const e of state.entries) {
+      if (!map.has(e.date)) map.set(e.date, []);
+      map.get(e.date).push(e);
+    }
+    return map;
+  }
+
+  function renderCalendar() {
+    const { y, m } = view;
+    $("#monthName").textContent = MONTHS[m];
+    $("#year").textContent = y;
+    const first = new Date(y, m, 1).getDay();
+    const days = new Date(y, m + 1, 0).getDate();
+    const rows = Math.ceil((first + days) / 7);
+    const cal = $("#cal"); cal.style.setProperty("--rows", rows); cal.replaceChildren();
+    for (const d of DOW) cal.append(el("div", { class: "dow", role: "columnheader" }, el("span", { class: "full", text: d }), el("span", { class: "short", text: d.slice(0, 3) })));
+    const map = byDay();
+    const tIso = todayIso();
+    let monthMin = 0;
+    for (let i = 0; i < rows * 7; i++) {
+      const dn = i - first + 1;
+      if (dn < 1 || dn > days) { cal.append(el("div", { class: "blank", "aria-hidden": "true" })); continue; }
+      const dIso = `${y}-${pad(m + 1)}-${pad(dn)}`;
+      const list = map.get(dIso) || [];
+      // group by subject, keep subject list order
+      const groups = new Map();
+      for (const e of list) {
+        const g = groups.get(e.subjectId) || { subj: subjectFor(e), min: 0 };
+        g.min += Number(e.minutes) || 0; groups.set(e.subjectId, g);
+      }
+      const order = state.subjects.map((s) => s.id);
+      const gl = [...groups.entries()].sort((a, b) => (order.indexOf(a[0]) + 99 * (order.indexOf(a[0]) < 0)) - (order.indexOf(b[0]) + 99 * (order.indexOf(b[0]) < 0))).map((x) => x[1]);
+      const dayMin = gl.reduce((a, g) => a + g.min, 0); monthMin += dayMin;
+      const dateObj = new Date(y, m, dn);
+      const label = `${DOW[dateObj.getDay()]}, ${MONTHS[m]} ${dn}` + (dayMin ? `, ${fmtDur(dayMin)} logged` : ", nothing logged");
+      const lines = el("span", { class: "lines" });
+      const cap = 3;
+      gl.slice(0, cap).forEach((g) => lines.append(el("span", { class: "ln", title: `${g.subj.name}: ${fmtDur(g.min)}` }, svgStar(pal(g.subj.color).star), el("span", { class: "t", text: `– ${fmtDur(g.min)}` }))));
+      if (gl.length > cap) {
+        lines.append(el("span", { class: "more", text: `+${gl.length - cap} more` }));
+        gl.slice(cap).forEach((g) => lines.append(el("span", { class: "ln extra", style: "display:none" }, svgStar(pal(g.subj.color).star))));
+      }
+      const hasNote = list.some((e) => e.note && e.note.trim());
+      cal.append(el("button", { class: "day" + (dIso === tIso ? " today" : ""), type: "button", role: "gridcell", "aria-label": label, onclick: () => openDay(dIso) },
+        el("span", { class: "num", text: dn }),
+        hasNote ? el("span", { class: "has-note", title: "Has a note" }) : null,
+        lines));
+    }
+    $("#monthTotal").textContent = monthMin ? `${fmtDur(monthMin)} this month` : "";
+  }
+
+  function render() { renderTasks(); renderCalendar(); }
+
+  // ---------- dialogs ----------
+  let lastFocus = null;
+  function openSheet(build) {
+    lastFocus = document.activeElement;
+    const root = $("#modalRoot"); root.replaceChildren();
+    const inner = el("div", { class: "sheet-in" });
+    const sheet = el("div", { class: "sheet", role: "dialog", "aria-modal": "true" }, inner);
+    const veil = el("div", { class: "veil", onclick: (e) => { if (e.target === veil) closeSheet(); } }, sheet);
+    root.append(veil);
+    build(inner, sheet);
+    const f = sheet.querySelector("[autofocus]") || sheet.querySelector("input,select,textarea,button");
+    if (f) setTimeout(() => f.focus(), 30);
+  }
+  function closeSheet() {
+    $("#modalRoot").replaceChildren();
+    if (lastFocus && document.contains(lastFocus)) lastFocus.focus();
+  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && $("#modalRoot").firstChild) { e.preventDefault(); closeSheet(); }
+    if (e.key === "Tab" && $("#modalRoot").firstChild) {
+      const f = [...$("#modalRoot").querySelectorAll("button,input,select,textarea")].filter((x) => !x.disabled && x.offsetParent);
+      if (!f.length) return;
+      if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+    }
+  });
+
+  function openLog({ subjectId, date, back } = {}) {
+    openSheet((box, sheet) => {
+      const subj = state.subjects.find((s) => s.id === subjectId) || state.subjects[0];
+      const h2 = el("h2", { id: "logTitle", text: subj && subj.title ? subj.title : "Add Study Time" });
+      sheet.setAttribute("aria-labelledby", "logTitle");
+      const kicker = el("p", { class: "kicker" });
+      const setKicker = (s) => { kicker.replaceChildren(s.name, s.tag ? el("span", { class: "tag", style: tagStyle(s.color), text: s.tag }) : ""); h2.textContent = s.title || "Add Study Time"; };
+      const subjSel = el("select", { id: "logSubject" }, state.subjects.map((s) => el("option", { value: s.id, text: s.tag ? `${s.name} · ${s.tag}` : s.name })));
+      subjSel.value = subj.id;
+      subjSel.addEventListener("change", () => setKicker(state.subjects.find((s) => s.id === subjSel.value)));
+      setKicker(subj);
+      const dateIn = el("input", { type: "date", id: "logDate", value: date || todayIso(), required: true });
+      const hIn = el("input", { type: "number", id: "logHours", min: 0, max: 24, step: 1, inputmode: "numeric", value: "", placeholder: "0", autofocus: true });
+      const mIn = el("select", { id: "logMinutes" }, [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((x) => el("option", { value: x, text: `${x} min` })));
+      const quick = el("div", { class: "quick", "aria-label": "Quick picks" },
+        [[30, "30 min"], [60, "1 hr"], [90, "1.5 hr"], [120, "2 hr"], [180, "3 hr"], [300, "5 hr"]].map(([v, t]) =>
+          el("button", { type: "button", text: t, onclick: () => { hIn.value = Math.floor(v / 60); mIn.value = v % 60; err.hidden = true; } })));
+      const note = el("textarea", { id: "logNote", placeholder: "What did you work on? e.g. Ch. 4 generating functions, problems 1–8", maxlength: 4000 });
+      const err = el("p", { class: "err", hidden: true });
+      const save = el("button", { class: "btn primary", type: "submit", text: "Add to calendar" });
+      const form = el("form", { class: "sheet-in", novalidate: true },
+        h2, kicker,
+        state.subjects.length > 1 ? el("div", { class: "field" }, el("label", { for: "logSubject", text: "Subject" }), subjSel) : null,
+        el("div", { class: "field" }, el("label", { for: "logDate", text: "Date" }), dateIn),
+        el("div", { class: "field" }, el("span", { class: "lbl", text: "Time studied" }),
+          el("div", { class: "row2" },
+            el("div", { class: "field" }, hIn, el("label", { for: "logHours", text: "hours", style: "font-size:12px;color:var(--ink-soft);text-transform:none;letter-spacing:0;font-weight:400" })),
+            el("div", { class: "field" }, mIn, el("label", { for: "logMinutes", text: "minutes", style: "font-size:12px;color:var(--ink-soft);text-transform:none;letter-spacing:0;font-weight:400" }))),
+          quick),
+        el("div", { class: "field" }, el("label", { for: "logNote", text: "Note (optional)" }), note),
+        err,
+        el("div", { class: "actions" },
+          el("button", { class: "btn ghost", type: "button", text: back ? "Back" : "Cancel", onclick: () => (back ? back() : closeSheet()) }),
+          save));
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const hours = Math.max(0, Math.floor(Number(hIn.value) || 0));
+        const minutes = hours * 60 + Number(mIn.value);
+        if (!dateIn.value) { err.textContent = "Pick the day you studied."; err.hidden = false; dateIn.focus(); return; }
+        if (minutes <= 0) { err.textContent = "Add how long you studied: hours, minutes, or a quick pick."; err.hidden = false; hIn.focus(); return; }
+        if (minutes > 24 * 60) { err.textContent = "That's more than 24 hours in one day. Check the hours."; err.hidden = false; hIn.focus(); return; }
+        const s = state.subjects.find((x) => x.id === subjSel.value) || subj;
+        const entry = { id: newId(), date: dateIn.value, subjectId: s.id, subjectName: s.name, tag: s.tag || "", color: s.color, minutes, note: note.value.trim(), createdAt: new Date().toISOString() };
+        save.disabled = true;
+        try {
+          await writeEntry(entry);
+        } catch (_) { save.disabled = false; return; }
+        const d = parseIso(entry.date);
+        if (d.getFullYear() !== view.y || d.getMonth() !== view.m) { view.y = d.getFullYear(); view.m = d.getMonth(); }
+        doneFlash.add(s.id); render();
+        setTimeout(() => { doneFlash.delete(s.id); renderTasks(); }, 1400);
+        if (back) openDay(entry.date); else closeSheet();
+        toast(`Added ${fmtDur(minutes)} of ${s.name} on ${MONTHS[d.getMonth()]} ${d.getDate()}.`);
+      });
+      box.replaceWith(form);
+    });
+  }
+
+  function openDay(dIso) {
+    openSheet((box, sheet) => {
+      const d = parseIso(dIso);
+      const list = state.entries.filter((e) => e.date === dIso).sort((a, b) => (a.createdAt || "").localeCompare(b.createdAt || ""));
+      const total = list.reduce((a, e) => a + (Number(e.minutes) || 0), 0);
+      sheet.setAttribute("aria-labelledby", "dayTitle");
+      box.append(el("h2", { id: "dayTitle", text: `${DOW[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}` }));
+      box.append(el("p", { class: "day-total", text: total ? `${fmtDur(total)} in total` : "No study time logged yet" }));
+      if (!list.length) {
+        box.append(el("p", { class: "empty-day", text: "Log a session for this day and it will show up here as a star, with your note." }));
+      } else {
+        const ul = el("ul", { class: "entries" });
+        for (const e of list) {
+          const s = subjectFor(e);
+          const tools = el("div", { class: "tools" });
+          const reset = () => tools.replaceChildren(el("button", { type: "button", text: "Remove", onclick: ask }));
+          function ask() {
+            tools.replaceChildren(el("span", { class: "confirm", text: "Remove this entry?" }),
+              el("button", { type: "button", text: "Yes, remove", onclick: async () => { await removeEntry(e.id); openDay(dIso); } }),
+              el("button", { type: "button", text: "Keep it", onclick: reset }));
+            tools.querySelector("button").focus();
+          }
+          reset();
+          ul.append(el("li", { class: "entry", style: tagStyle(s.color) },
+            svgStar(pal(s.color).star),
+            el("div", { class: "what" }, s.name, s.tag ? el("span", { class: "tag", style: tagStyle(s.color), text: s.tag }) : null),
+            el("span", { class: "dur", text: fmtDur(Number(e.minutes) || 0) }),
+            e.note ? el("p", { class: "note", text: e.note }) : el("p", { class: "no-note", text: "No note" }),
+            tools));
+        }
+        box.append(ul);
+      }
+      box.append(el("div", { class: "actions" },
+        el("button", { class: "btn ghost", type: "button", text: "Close", onclick: closeSheet }),
+        state.subjects.length ? el("button", { class: "btn primary", type: "button", text: "Log time for this day", onclick: () => openLog({ subjectId: state.subjects[0].id, date: dIso, back: () => openDay(dIso) }) }) : null));
+    });
+  }
+
+  function openSubjects() {
+    openSheet((box, sheet) => {
+      let draft = state.subjects.map((s) => ({ ...s }));
+      sheet.setAttribute("aria-labelledby", "subjTitle");
+      box.append(el("h2", { id: "subjTitle", text: "Your study list" }));
+      box.append(el("p", { class: "kicker", text: "Rename subjects, change their star colour, or add a new term's courses. Hours you've already logged stay on the calendar." }));
+      const listBox = el("div", { class: "subj-list" });
+      const draw = () => {
+        listBox.replaceChildren();
+        draft.forEach((s, i) => {
+          const sw = el("div", { class: "swatches", role: "group", "aria-label": "Star colour" },
+            Object.entries(PALETTE).map(([k, p]) => {
+              const b = el("button", { type: "button", class: "swatch", "aria-pressed": String(s.color === k), "aria-label": p.label, title: p.label, onclick: () => { s.color = k; draw(); } });
+              b.append(svgStar(p.star)); return b;
+            }));
+          listBox.append(el("div", { class: "subj" },
+            el("div", { class: "field full" }, el("label", { for: `sn${i}`, text: "Subject" }), el("input", { type: "text", id: `sn${i}`, value: s.name, oninput: (e) => (s.name = e.target.value) })),
+            el("div", { class: "field" }, el("label", { for: `st${i}`, text: "Tag" }), el("input", { type: "text", id: `st${i}`, value: s.tag, maxlength: 12, oninput: (e) => (s.tag = e.target.value) })),
+            el("div", { class: "field" }, el("label", { for: `sh${i}`, text: "Heading" }), el("input", { type: "text", id: `sh${i}`, value: s.title, oninput: (e) => (s.title = e.target.value) })),
+            el("div", { class: "field full" }, el("span", { class: "lbl", text: "Star colour" }), sw),
+            draft.length > 1 ? el("button", { class: "remove", type: "button", text: "Remove from list", onclick: () => { draft.splice(i, 1); draw(); } }) : null));
+        });
+      };
+      draw();
+      box.append(listBox);
+      const used = () => Object.keys(PALETTE).find((k) => !draft.some((s) => s.color === k)) || "green";
+      box.append(el("button", { class: "btn add-subj", type: "button", text: "+ Add a subject", onclick: () => { draft.push({ id: newId(), title: "Add Study Time", name: "", tag: "", color: used() }); draw(); listBox.lastChild.querySelector("input").focus(); } }));
+      const err = el("p", { class: "err", hidden: true });
+      box.append(err);
+      box.append(el("div", { class: "actions" },
+        el("button", { class: "btn ghost", type: "button", text: "Cancel", onclick: closeSheet }),
+        el("button", { class: "btn primary", type: "button", text: "Save list", onclick: async () => {
+          draft = draft.map((s) => ({ ...s, name: s.name.trim(), tag: s.tag.trim(), title: s.title.trim() || "Add Study Time" }));
+          if (draft.some((s) => !s.name)) { err.textContent = "Give every subject a name, or remove the empty one."; err.hidden = false; return; }
+          closeSheet(); await writeSubjects(draft); toast("Study list saved.");
+        } })));
+    });
+  }
+
+  // ---------- wire up ----------
+  $("#prev").addEventListener("click", () => { view.m--; if (view.m < 0) { view.m = 11; view.y--; } renderCalendar(); });
+  $("#next").addEventListener("click", () => { view.m++; if (view.m > 11) { view.m = 0; view.y++; } renderCalendar(); });
+  $("#todayBtn").addEventListener("click", () => { const t = new Date(); view.y = t.getFullYear(); view.m = t.getMonth(); renderCalendar(); });
+  $("#editSubjects").addEventListener("click", openSubjects);
+
+  // keep "today" correct if the tab stays open past midnight
+  let lastDay = todayIso();
+  setInterval(() => { if (todayIso() !== lastDay) { lastDay = todayIso(); renderCalendar(); } }, 60000);
+
+  loadLocal();
+  render();
+  connectDb();
+})();
+</script>
+
+</body></html>
