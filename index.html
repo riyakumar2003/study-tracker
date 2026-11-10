@@ -283,8 +283,9 @@ textarea { resize: vertical; min-height: 84px; font-family: var(--sans); line-he
 }
 
 /* ---------- desktop: fill the whole window ----------
-   The stage is the full viewport. The left artwork keeps its proportions, hugs the seam and is
-   centred vertically on pink (its edges are the same pink). The right page stretches: boxes use
+   The stage is the full viewport. The left artwork keeps its proportions, sits against the left
+   edge and is centred vertically on pink (its edges are the same pink). The right page takes all
+   the remaining width and stretches: boxes use
    --kx / --ky (one design px horizontally / vertically), art and text use --k (the smaller). */
 @media (min-width: 901px) {
   body { padding: 0; background: var(--pink); }
@@ -296,11 +297,13 @@ textarea { resize: vertical; min-height: 84px; font-family: var(--sans); line-he
   .page.left {
     height: auto; aspect-ratio: 778 / 982;
     width: min(calc(100cqw * 778 / 1512), calc(100cqh * 778 / 982));
-    left: calc(100cqw * 753 / 1512 - min(calc(100cqw * 753 / 1512), calc(100cqh * 753 / 982)));
+    left: 0;
     top: calc((100cqh - min(calc(100cqw * 982 / 1512), 100cqh)) / 2);
   }
   .page.right {
     height: 100%;
+    left: min(calc(100cqw * 753 / 1512), calc(100cqh * 753 / 982));
+    width: auto; right: 0;
     container-type: size;
     --kx: calc(100cqw / 759);
     --ky: calc(100cqh / 982);
