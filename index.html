@@ -282,6 +282,42 @@ textarea { resize: vertical; min-height: 84px; font-family: var(--sans); line-he
   box-shadow: 0 3px 0 rgba(0,0,0,.25);
 }
 
+/* ---------- desktop: fill the whole window ----------
+   The stage is the full viewport. The left artwork keeps its proportions, hugs the seam and is
+   centred vertically on pink (its edges are the same pink). The right page stretches: boxes use
+   --kx / --ky (one design px horizontally / vertically), art and text use --k (the smaller). */
+@media (min-width: 901px) {
+  body { padding: 0; background: var(--pink); }
+  .stage {
+    width: 100%; height: 100vh; height: 100dvh; min-height: 480px;
+    aspect-ratio: auto; overflow: hidden;
+    container-type: size;
+  }
+  .page.left {
+    height: auto; aspect-ratio: 778 / 982;
+    width: min(calc(100cqw * 778 / 1512), calc(100cqh * 778 / 982));
+    left: calc(100cqw * 753 / 1512 - min(calc(100cqw * 753 / 1512), calc(100cqh * 753 / 982)));
+    top: calc((100cqh - min(calc(100cqw * 982 / 1512), 100cqh)) / 2);
+  }
+  .page.right {
+    height: 100%;
+    container-type: size;
+    --kx: calc(100cqw / 759);
+    --ky: calc(100cqh / 982);
+    --k: min(var(--kx), var(--ky));
+  }
+  .painting { height: calc(470 * var(--ky)); background-size: cover; background-position: right top; }
+  .month { right: calc(24 * var(--kx)); top: calc(196 * var(--ky)); }
+  .nav { right: calc(22 * var(--kx)); top: calc(410 * var(--ky)); }
+  .swans { left: calc(2 * var(--kx)); top: calc(462 * var(--ky) - 86 * var(--k)); }
+  .flourish { left: auto; right: 0; top: calc(962 * var(--ky) - 126 * var(--k)); }
+  .cal {
+    left: calc(20 * var(--kx)); top: calc(462 * var(--ky));
+    width: calc(719 * var(--kx)); height: calc(500 * var(--ky));
+    grid-template-rows: calc(56 * var(--k)) repeat(var(--rows, 5), 1fr);
+  }
+}
+
 /* ---------- phones & narrow windows: stack the pages ---------- */
 @media (max-width: 900px) {
   body { background: var(--pink); }
