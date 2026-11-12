@@ -349,6 +349,83 @@ textarea { resize: vertical; min-height: 84px; font-family: var(--sans); line-he
   .day .lines { flex-direction: row; flex-wrap: wrap; gap: 1px; }
   .day .more { display: none; }
 }
+
+/* ---------- to-do side panel (separate from the calendar) ----------
+   Desktop: a column on the right edge that the spread makes room for; it folds into a tab.
+   Phones: a card at the bottom of the page. */
+:root { --todo-w: clamp(260px, 23vw, 330px); }
+.todo-tab, .todo-hide { display: none; }
+.todo-frame { background: var(--olive); border-radius: 3px; padding: 14px 13px 16px; }
+.todo-card {
+  background: var(--paper); border-radius: 6px; box-shadow: 0 4px 0 var(--ink);
+  padding: 14px 16px 14px; display: flex; flex-direction: column; min-height: 0;
+}
+.todo-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.todo-head h2 { margin: 0; font-family: var(--hand); font-weight: 400; font-size: 30px; line-height: 1.15; }
+.todo-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; overflow-y: auto; min-height: 0; scrollbar-width: thin; }
+.todo-item { display: grid; grid-template-columns: 22px 1fr 22px; align-items: start; column-gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--hairline); }
+.todo-item > .todo-tick, .todo-item > .todo-del { margin-top: 1px; }
+.todo-tick { width: 22px; height: 22px; border: 2.5px solid var(--ink); border-radius: 50%; background: none; padding: 0; display: grid; place-items: center; transition: background-color .15s; }
+.todo-tick svg { width: 66%; height: 66%; opacity: 0; transition: opacity .15s; }
+.todo-tick:hover { background: #f1efe6; }
+.todo-item.done .todo-tick { background: var(--ink); }
+.todo-item.done .todo-tick svg { opacity: 1; }
+.todo-text {
+  font-size: 15px; line-height: 1.4; color: var(--ink);
+  padding: 1px 5px; margin-left: -5px; border-radius: 4px;
+  min-width: 0; overflow-wrap: anywhere; white-space: pre-wrap; cursor: text;
+}
+.todo-text:hover { background: #fbf8f1; }
+.todo-text:focus { outline: none; background: #fbf8f1; box-shadow: inset 0 -1.5px 0 var(--olive); }
+.todo-item.done .todo-text { text-decoration: line-through; text-decoration-color: rgba(27,27,23,.45); color: #8b897f; }
+.todo-del { width: 22px; height: 22px; border: 0; border-radius: 50%; background: none; padding: 0; color: #8b897f; font-size: 19px; line-height: 1; opacity: 0; transition: opacity .15s; }
+.todo-item:hover .todo-del, .todo-del:focus-visible { opacity: 1; }
+.todo-del:hover { color: #a12c2c; background: #f8eeec; }
+@media (hover: none) { .todo-del { opacity: .75; } }
+.todo-empty { padding: 8px 0 10px; font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--ink-soft); border-bottom: 1px solid var(--hairline); }
+.todo-add { display: flex; gap: 8px; margin-top: 12px; flex: none; }
+.todo .todo-add input { font-size: 15px; padding: 8px 10px; }
+.todo-add button { flex: none; width: 38px; border-radius: 6px; border: 1.5px solid var(--olive-deep); background: var(--olive); color: #fff; font-size: 21px; line-height: 1; box-shadow: 0 2px 0 var(--ink); }
+.todo-add button:hover { background: var(--olive-deep); }
+.todo-clear { align-self: flex-start; flex: none; margin-top: 10px; border: 0; background: none; padding: 0; font-size: 13px; color: #7b786d; text-decoration: underline; text-underline-offset: 2px; }
+.todo-clear:hover { color: var(--ink); }
+
+@media (min-width: 901px) {
+  .todo { position: fixed; top: 0; right: 0; bottom: 0; z-index: 10; }
+  .todo-panel {
+    display: none; flex-direction: column; justify-content: center;
+    width: var(--todo-w); height: 100%;
+    padding: 18px 14px 20px;
+    background: var(--olive);
+  }
+  body.todo-open .todo-panel { display: flex; }
+  body.todo-open .stage { width: calc(100% - var(--todo-w)); margin: 0; }
+  .todo-frame { display: flex; flex-direction: column; max-height: 100%; min-height: 0; padding: 0; background: none; }
+  .todo-card { padding: 14px 14px 14px; }
+  .todo-card { flex: 0 1 auto; }
+  .todo-hide {
+    display: grid; place-items: center; flex: none;
+    width: 28px; height: 28px; border: 0; border-radius: 50%;
+    background: #f1efe6; color: var(--ink); font-size: 18px; line-height: 1;
+  }
+  .todo-hide:hover { background: #e6e3d6; }
+  .todo-tab {
+    display: block; position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 10;
+    writing-mode: vertical-rl;
+    border: 0; border-radius: 8px 0 0 8px;
+    background: var(--olive); color: #f6f2dc;
+    font-family: var(--hand); font-size: 19px; letter-spacing: .02em;
+    padding: 16px 9px;
+    box-shadow: -3px 3px 0 var(--ink);
+  }
+  .todo-tab:hover { background: var(--olive-deep); }
+  body.todo-open .todo-tab { display: none; }
+}
+@media (max-width: 900px) {
+  .todo { margin: 0 -16px; padding: 0 16px 32px; background: var(--leaf); }
+  .todo-panel { max-width: 560px; margin: 0 auto; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -378,6 +455,26 @@ textarea { resize: vertical; min-height: 84px; font-family: var(--sans); line-he
     <img class="flourish" src="assets/flourish.png" alt="">
   </section>
 </main>
+
+<aside class="todo" aria-label="To-do list">
+  <button class="todo-tab" id="todoTab" type="button" aria-expanded="true" aria-controls="todoPanel">to do</button>
+  <div class="todo-panel" id="todoPanel">
+    <div class="todo-frame">
+      <div class="todo-card">
+        <div class="todo-head">
+          <h2>To Do</h2>
+          <button class="todo-hide" id="todoHide" type="button" aria-label="Hide to-do list">›</button>
+        </div>
+        <ul class="todo-list" id="todoList"></ul>
+        <form class="todo-add" id="todoAdd" autocomplete="off">
+          <input id="todoInput" type="text" maxlength="200" placeholder="add a task…" aria-label="New task">
+          <button type="submit" aria-label="Add task">+</button>
+        </form>
+        <button class="todo-clear" id="todoClear" type="button" hidden>clear done</button>
+      </div>
+    </div>
+  </div>
+</aside>
 
 <div id="modalRoot"></div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -494,6 +591,28 @@ textarea { resize: vertical; min-height: 84px; font-family: var(--sans); line-he
       catch (err) { toast("Your list didn't save: " + (err && err.message || "try again.")); }
     }
   }
+  // to-do list: its own storage, never touches the calendar
+  const TODO_KEY = "study-tracker-todo-v1";
+  const TODO_OPEN_KEY = "study-tracker-todo-open";
+  let todoKey = TODO_KEY;
+  let todoRef = null; // data/users/<id>/todo  (holds { items })
+  let todoStale = false; // a remote change arrived while a task was being edited
+  state.todos = [];
+  function loadTodos() {
+    try { const d = JSON.parse(localStorage.getItem(todoKey) || "null"); state.todos = Array.isArray(d) ? d : []; }
+    catch (e) { state.todos = []; }
+  }
+  function saveTodosLocal() {
+    try { localStorage.setItem(todoKey, JSON.stringify(state.todos)); } catch (e) {}
+  }
+  async function writeTodos(list) {
+    state.todos = list; saveTodosLocal(); renderTodos();
+    if (todoRef) {
+      try { await todoRef.set({ items: list }); }
+      catch (err) { toast("Your to-do list didn't save: " + (err && err.message || "try again.")); }
+    }
+  }
+
   async function connectDb() {
     if (!window.claude || typeof window.claude.use !== "function") return;
     let db = null;
@@ -507,6 +626,17 @@ textarea { resize: vertical; min-height: 84px; font-family: var(--sans); line-he
     lsKey = LS_KEY + ":" + uid;
     state.entries = []; state.subjects = DEFAULT_SUBJECTS.slice();
     loadLocal(); render();
+    todoKey = TODO_KEY + ":" + uid;
+    loadTodos(); renderTodos();
+    todoRef = db.doc("data/users/" + uid + "/todo");
+    todoRef.onSnapshot((snap) => {
+      if (!snap.exists) return;
+      const l = snap.data().items;
+      if (!Array.isArray(l)) return;
+      state.todos = l; saveTodosLocal();
+      // don't yank the cursor out of a task being edited
+      if (!$("#todoList").contains(document.activeElement)) renderTodos(); else todoStale = true;
+    }, () => {});
     state.db = db;
     let settled = false;
     const timer = setTimeout(() => { if (!settled) toast("Still reaching your saved hours. What you see may be out of date.", 5000); }, 10000);
@@ -757,6 +887,64 @@ textarea { resize: vertical; min-height: 84px; font-family: var(--sans); line-he
   $("#next").addEventListener("click", () => { view.m++; if (view.m > 11) { view.m = 0; view.y++; } renderCalendar(); });
   $("#todayBtn").addEventListener("click", () => { const t = new Date(); view.y = t.getFullYear(); view.m = t.getMonth(); renderCalendar(); });
   $("#editSubjects").addEventListener("click", openSubjects);
+
+  // ---------- to-do list ----------
+  const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function renderTodos() {
+    todoStale = false;
+    const list = $("#todoList"); list.replaceChildren();
+    if (!state.todos.length) list.append(el("li", { class: "todo-empty", text: "Nothing yet. Add a task below." }));
+    for (const t of state.todos) {
+      const update = (patch) => writeTodos(state.todos.map((x) => (x.id === t.id ? { ...x, ...patch } : x)));
+      const remove = () => writeTodos(state.todos.filter((x) => x.id !== t.id));
+      const tick = el("button", { class: "todo-tick", type: "button", role: "checkbox", "aria-checked": t.done ? "true" : "false", "aria-label": t.text, onclick: () => update({ done: !t.done }) });
+      tick.innerHTML = CHECK;
+      // the task text wraps and can be edited in place; Enter saves, Escape undoes
+      const text = el("span", { class: "todo-text", contenteditable: "plaintext-only", role: "textbox", "aria-label": "Edit task", spellcheck: "true", text: t.text });
+      text.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); text.blur(); }
+        if (e.key === "Escape") { text.textContent = t.text; text.blur(); }
+      });
+      text.addEventListener("blur", () => {
+        const v = text.textContent.replace(/\s+/g, " ").trim().slice(0, 200);
+        if (!v) remove();
+        else if (v !== t.text) update({ text: v });
+        else if (todoStale) renderTodosSoon();
+      });
+      const del = el("button", { class: "todo-del", type: "button", "aria-label": "Remove " + t.text, text: "×", onclick: remove });
+      list.append(el("li", { class: "todo-item" + (t.done ? " done" : "") }, tick, text, del));
+    }
+    const doneCount = state.todos.filter((t) => t.done).length;
+    const left = state.todos.length - doneCount;
+    $("#todoClear").hidden = doneCount === 0;
+    $("#todoTab").textContent = left ? `to do · ${left}` : "to do";
+  }
+  // pick up changes that arrived from another device while a task was being edited
+  const renderTodosSoon = () => setTimeout(() => { if (!$("#todoList").contains(document.activeElement)) renderTodos(); }, 0);
+
+  $("#todoAdd").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = $("#todoInput");
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    writeTodos(state.todos.concat({ id: newId(), text, done: false, createdAt: Date.now() }));
+    const list = $("#todoList"); list.scrollTop = list.scrollHeight;
+  });
+  $("#todoClear").addEventListener("click", () => writeTodos(state.todos.filter((t) => !t.done)));
+  function setTodoOpen(open, moveFocus) {
+    document.body.classList.toggle("todo-open", open);
+    $("#todoTab").setAttribute("aria-expanded", String(open));
+    try { localStorage.setItem(TODO_OPEN_KEY, open ? "1" : "0"); } catch (e) {}
+    if (moveFocus) (open ? $("#todoInput") : $("#todoTab")).focus();
+  }
+  $("#todoTab").addEventListener("click", () => setTodoOpen(true, true));
+  $("#todoHide").addEventListener("click", () => setTodoOpen(false, true));
+  let todoStartsOpen = true;
+  try { todoStartsOpen = localStorage.getItem(TODO_OPEN_KEY) !== "0"; } catch (e) {}
+  setTodoOpen(todoStartsOpen);
+  loadTodos();
+  renderTodos();
 
   // keep "today" correct if the tab stays open past midnight
   let lastDay = todayIso();
